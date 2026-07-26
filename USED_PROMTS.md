@@ -21,3 +21,24 @@ POST to create/attach a note to an entry (validate the input),
 GET to list the current user's notes.
 
 Return proper status codes and reuse the project's existing DTO / exception-mapping style.
+
+## Second task promt
+
+Lets go futher with next task - task 2. All rules,restrictions, conditions are specefied in file [AI_RULES.md](file;file:///home/nikitos/IdeaProjects/commafeed/commafeed-server/AI_RULES.md). Any questions you have, should be resolved within your propoced plan, by my comments.
+
+Here some additional information about TASK 2 that will help you proceed:
+
+TASK  2 — LLM 'rewrite this entry' endpoint 
+
+Add an endpoint that takes an existing feed entry by ID and uses a free LLM API to produce an alternative version of its title or content.
+
+POST /entry/{id}/generate-alternative
+
+Request body: target (title or content) and prompt (a free-text instruction, e.g. "rewrite this headline for a technical audience").
+
+
+The endpoint loads the entry, sends the chosen field plus the prompt to the LLM, and returns the original entry, the target, the prompt, and the generated alternative.
+
+Handle a missing entry and an LLM failure distinctly (correct status codes, no stack traces leaking to the client).
+
+The LLM part such as api key configuration - will be handled by myself
