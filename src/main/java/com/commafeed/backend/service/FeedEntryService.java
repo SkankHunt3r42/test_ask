@@ -31,6 +31,7 @@ public class FeedEntryService {
     private final FeedEntryStatusDAO feedEntryStatusDAO;
     private final FeedEntryContentService feedEntryContentService;
     private final FeedEntryFilteringService feedEntryFilteringService;
+    private final LlmService llmService;
 
     public FeedEntry find(Feed feed, Entry entry) {
         String guidHash = Digests.sha1Hex(entry.guid());
@@ -168,4 +169,29 @@ public class FeedEntryService {
                     feedEntryStatusDAO.merge(s);
                 });
     }
+
+    public GenerateAlternativeResult generateAlternative(
+            User user, Long entryId, String target, String prompt) throws Exception {
+        FeedEntry entry = feedEntryDAO.findById(entryId);
+        if (entry == null) {
+            return null;
+        }
+
+        String textToRewrite =
+                "title".equalsIgnoreCase(target)
+                        ? entry.getContent().getTitle()
+                        : entry.getContent().getContent();
+
+        if (textToRewrite == null || textToRewrite.isBlank()) {
+            throw new IllegalArgumentException("Target text is empty");
+        }
+
+        String generated = llmService.generateAlternative(textToRewrite, prompt);
+        FeedSubscription sub = feedSubscriptionDAO.findByFeed(user, entry.getFeed());
+        FeedEntryStatus status = feedEntryStatusDAO.getStatus(user, sub, entry);
+
+        return new GenerateAlternativeResult(generated, status);
+    }
+
+    public record GenerateAlternativeResult(String generated, FeedEntryStatus status) {}
 }

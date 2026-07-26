@@ -3,7 +3,11 @@ package com.commafeed.frontend.resource;
 import com.commafeed.backend.dao.FeedEntryTagDAO;
 import com.commafeed.backend.model.User;
 import com.commafeed.backend.service.FeedEntryService;
+import com.commafeed.backend.service.FeedEntryService.GenerateAlternativeResult;
 import com.commafeed.backend.service.FeedEntryTagService;
+import com.commafeed.frontend.model.Entry;
+import com.commafeed.frontend.model.GenerateAlternativeResponse;
+import com.commafeed.frontend.model.request.GenerateAlternativeRequest;
 import com.commafeed.frontend.model.request.MarkRequest;
 import com.commafeed.frontend.model.request.MultipleMarkRequest;
 import com.commafeed.frontend.model.request.StarRequest;
@@ -19,11 +23,14 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -34,6 +41,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Consumes(MediaType.APPLICATION_JSON)
 @RequiredArgsConstructor
 @Singleton
+@Slf4j
 @Tag(name = "Feed entries")
 public class EntryREST {
 
@@ -119,5 +127,41 @@ public class EntryREST {
         feedEntryTagService.updateTags(user, req.getEntryId(), req.getTags());
 
         return Response.ok().build();
+    }
+
+    @Path("/{id}/generate-alternative")
+    @POST
+    @Transactional
+    @Operation(summary = "Generate alternative text using an LLM")
+    public Response generateAlternative(
+            @PathParam("id") String id,
+            @Valid @Parameter(description = "Generate alternative request", required = true)
+                    GenerateAlternativeRequest req) {
+
+        try {
+            User user = authenticationContext.getCurrentUser();
+            GenerateAlternativeResult result =
+                    feedEntryService.generateAlternative(
+                            user, Long.valueOf(id), req.getTarget(), req.getPrompt());
+
+            if (result == null) {
+                return Response.status(Status.NOT_FOUND).entity("Entry not found").build();
+            }
+
+            GenerateAlternativeResponse response = new GenerateAlternativeResponse();
+            response.setTarget(req.getTarget());
+            response.setPrompt(req.getPrompt());
+            response.setGeneratedAlternative(result.generated());
+            response.setOriginalEntry(Entry.build(result.status(), false));
+
+            return Response.ok(response).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            log.error("Failed to generate alternative text for entry {}", id, e);
+            return Response.status(Status.BAD_GATEWAY)
+                    .entity("Error communicating with LLM API.")
+                    .build();
+        }
     }
 }
