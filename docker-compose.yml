@@ -1,8 +1,8 @@
 services:
   backend:
     build:
-      context: .. # Access the parent directory during build to read the parent pom.xml
-      dockerfile: commafeed-server/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: commafeed-backend
     ports:
       - "8082:8082"

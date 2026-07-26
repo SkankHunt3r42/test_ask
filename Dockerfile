@@ -2,27 +2,23 @@
 FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /app
 
-# We are building with context: .. (from docker-compose) so we copy the parent pom to satisfy Maven
+# Copy the localized parent pom and the server pom
+COPY parent/pom.xml parent/pom.xml
 COPY pom.xml .
-# Create a minimal dummy client pom.xml because the real one is blocked by ../.dockerignore
-RUN mkdir commafeed-client && echo '<project><modelVersion>4.0.0</modelVersion><parent><groupId>com.commafeed</groupId><artifactId>commafeed</artifactId><version>7.2.0</version></parent><artifactId>commafeed-client</artifactId></project>' > commafeed-client/pom.xml
-COPY commafeed-server/pom.xml commafeed-server/
 
-# We also copy the server source code and dev tools (for checkstyle)
-COPY commafeed-server/src commafeed-server/src
-COPY commafeed-server/dev commafeed-server/dev
+# Copy the server source code and dev tools (for checkstyle)
+COPY src src
+COPY dev dev
 
-# We build ONLY the commafeed-server module
-WORKDIR /app/commafeed-server
-# Using -am (also make) to ensure it builds anything commafeed-server requires, skipping tests for speed
-RUN mvn clean package -pl . -am -DskipTests
+# We build the module standalone, using a cache mount to save Maven dependencies permanently
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests
 
 # Stage 2: Run the compiled application
 FROM eclipse-temurin:25-jre
 WORKDIR /app
 
 # Copy the built application from the build stage
-COPY --from=build /app/commafeed-server/target/quarkus-app/ /app/
+COPY --from=build /app/target/quarkus-app/ /app/
 
 EXPOSE 8082
 
