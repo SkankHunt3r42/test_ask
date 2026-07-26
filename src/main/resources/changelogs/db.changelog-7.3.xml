@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="feedentrynotes" author="commafeed">
+        <createTable tableName="FEEDENTRYNOTES">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entry_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="text"/>
+            <column name="rating" type="int"/>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="FK_FEEDENTRYNOTES_USER"
+                                 baseTableName="FEEDENTRYNOTES" baseColumnNames="user_id"
+                                 referencedTableName="USERS" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint constraintName="FK_FEEDENTRYNOTES_ENTRY"
+                                 baseTableName="FEEDENTRYNOTES" baseColumnNames="entry_id"
+                                 referencedTableName="FEEDENTRIES" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+                                 
+        <createIndex indexName="IDX_FEEDENTRYNOTES_USER_ENTRY" tableName="FEEDENTRYNOTES">
+            <column name="user_id"/>
+            <column name="entry_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
