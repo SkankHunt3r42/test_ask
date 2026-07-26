@@ -1,6 +1,6 @@
 package com.commafeed.frontend.model.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import lombok.Data;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -11,10 +11,10 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 public class GenerateAlternativeRequest implements Serializable {
 
     @Schema(description = "target to rewrite (title or content)", required = true)
-    @NotNull
+    @NotBlank
     private String target;
 
     @Schema(description = "prompt instruction for the LLM", required = true)
-    @NotNull
+    @NotBlank
     private String prompt;
 }

@@ -177,10 +177,14 @@ public class FeedEntryService {
             return null;
         }
 
-        String textToRewrite =
-                "title".equalsIgnoreCase(target)
-                        ? entry.getContent().getTitle()
-                        : entry.getContent().getContent();
+        String textToRewrite;
+        if ("title".equalsIgnoreCase(target)) {
+            textToRewrite = entry.getContent().getTitle();
+        } else if ("content".equalsIgnoreCase(target)) {
+            textToRewrite = entry.getContent().getContent();
+        } else {
+            throw new IllegalArgumentException("Target must be either 'title' or 'content'");
+        }
 
         if (textToRewrite == null || textToRewrite.isBlank()) {
             throw new IllegalArgumentException("Target text is empty");
