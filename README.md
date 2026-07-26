@@ -23,7 +23,7 @@ You can launch the application directly from the source code using the provided 
 
 From the `commafeed-server` directory, run:
 ```bash
-../mvnw quarkus:dev
+./mvnw quarkus:dev
 ```
 *Note: The server will start up and listen on `http://localhost:8083` for API requests.*
 
@@ -51,3 +51,6 @@ To shut the server down:
 ```bash
 docker compose down
 ```
+# AI WORKFLOW
+
+For this task, I used Antigravity AI, because its agentic capabilities allow for direct codebase navigation and terminal execution without context-switching. Since CommaFeed is too large to paste into a single prompt, I managed the context dynamically. Instead of dumping entire directories, I created a strict AI_RULES.md file that acted as a persistent system prompt. This file enforced architectural boundaries (e.g., JAX-RS over Spring Boot, extending GenericDAO). To keep token usage strictly under control and prevent "hallucinations" of massive incorrect code blocks, I enforced a "Plan-first" rule. I directed the AI to analyze specific existing files (like EntryREST.java or FeedEntry.java) as templates, and required it to outline a step-by-step proposal. The AI was strictly forbidden from generating any implementation code until I manually reviewed and approved its plan.
